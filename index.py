@@ -1,6 +1,6 @@
 import pygame as pg 
 import sys
-from Inputs import Buttons
+from Inputs import *
 
 class Juego():
     def __init__(self):
@@ -11,39 +11,61 @@ class Juego():
         self. ejecutando = True
         self.bkgColor = ((44, 62, 80))
 
-        self.texto = 0
+        self.texto = ""
         self.font = pg.font.SysFont("system",60)
-        self.txtR = self.font.render(str(self.texto),True,"white")
 
-        btSuma = Buttons(10,10,"Sumar")
-        btResta = Buttons(100,10,"Restar")
+        self.Rectangulo = pg.Rect(10,60,2,2)
 
-        self.listaBotones = [
-            (btSuma,self.Sumar),
-            (btResta,self.Resta)
+        self.inp = InputText(10,10,32,placeholder="Ancho")
+        self.inp2 = InputText(200,10,32,placeholder="Alto")
+        self.btn = Buttons(320,10,"Cambiar")
+        self.btn2 = Buttons(420,10,"Reset")
+
+        self.listaInp = [
+            (self.inp,self.CambiarAncho),
+            (self.inp2,self.CambiarAlto)
         ]
 
-    def Sumar(self):
-        self.texto =self.texto +1
-        self.txtR = self.font.render(str(self.texto),True,"white")
-        return self.texto
+        self.listaBtn = [
+            (self.btn,self.CambiarMedida),
+            (self.btn2,self.ResetMedida)
+        ]
 
-    
-    def Resta(self):
-        self.texto = self.texto -1 
-        self.txtR = self.font.render(str(self.texto),True,"white")
-        return self.texto
-    
+    def CambiarAncho(self):
+        self.Rectangulo.w = int(self.inp.text)
+
+    def CambiarAlto(self):
+        self.Rectangulo.h = int(self.inp2.text)
+
+    def CambiarMedida(self):
+        if self.inp.text.isdigit() and self.inp2.text.isdigit():
+            self.Rectangulo.w = int(self.inp.text)
+            self.Rectangulo.h = int(self.inp2.text)
+        else:
+            print("Error")
+
+    def ResetMedida(self):
+        self.Rectangulo.w = 2
+        self.Rectangulo.h = 2
+
+        for inpt,_ in self.listaInp:
+            inpt.Reset()
+
     def ScreenUpdate(self):
 
         self.ventana.fill(self.bkgColor)
 
-        for btns,_ in self.listaBotones:
-            btns.Render(self.ventana)
+        for inpt,_ in self.listaInp:
+            inpt.Render(self.ventana)
 
-        self.ventana.blit(self.txtR,(10,60))
+        for btn,_ in self.listaBtn:
+            btn.Render(self.ventana)
+        
+        
+        pg.draw.rect(self.ventana,"red",self.Rectangulo)
+
         pg.display.flip()
-        self.fps.tick(60)
+  
 
     def ejecutar(self):
         while self.ejecutando:
@@ -51,10 +73,14 @@ class Juego():
                 if evento.type == pg.QUIT:
                     self.ejecutando = False
 
-                for btns , function in self.listaBotones:
-                    btns.Selecction(evento,function)
+                for inpt,function in self.listaInp:
+                    inpt.check_active(evento,function)
+                
+                for btn,function in self.listaBtn:
+                    btn.Selecction(evento,function)
 
             self.ScreenUpdate()
+            self.fps.tick(60)
 
         pg.quit()
         sys.exit()

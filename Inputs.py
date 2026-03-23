@@ -52,3 +52,58 @@ class Buttons:
         #Dibujamos el rectangulo del Boton y su texto
         pg.draw.rect(screen,(self.Color),self.btnBox,0,self.radius)
         screen.blit(self.txtR,(self.centerX,self.centerY))
+
+class InputText:
+    def __init__(self,posX,posY,fontSize = 20,placeholder = "Escribe Aqui...",colorAct = (236, 240, 241) ,colorDec=(52,73,94)):
+
+        self.placeholder = placeholder
+        self.text = ""
+        self.font = pg.font.SysFont("arial", fontSize)
+
+        #colores
+        self.colorActivo = colorAct
+        self.colorDesactivo = colorDec
+        self.color = self.colorDesactivo
+
+        self.txtBox = pg.Rect(posX,posY,140,fontSize + 5)
+        self.activo = False
+
+        self.UpdateText()
+        
+    def UpdateText(self):
+
+        placeText = self.text if self.text or self.activo else self.placeholder
+        color = self.colorActivo if self.activo else self.colorDesactivo
+        self.txtRender = self.font.render(placeText,True,color)
+        self.color = self.colorActivo if self.activo else self.colorDesactivo
+
+        width = max(100,self.txtRender.get_width()+10)
+        self.txtBox.w = width
+
+    def Reset(self):
+        self.text = ""
+        self.UpdateText()
+
+    def check_active(self,event,func=None):
+
+        if event.type == pg.MOUSEBUTTONDOWN:
+            self.activo = self.txtBox.collidepoint(event.pos)
+            
+            self.UpdateText()
+
+        if event.type == pg.KEYDOWN and self.activo:
+            if event.key == pg.K_RETURN:
+                self.activo = False
+                self.UpdateText()
+                return func()
+            elif event.key == pg.K_BACKSPACE:
+                self.text = self.text[:-1]
+            else:
+                self.text += event.unicode
+            self.UpdateText()
+
+
+
+    def Render(self,screen):
+        pg.draw.rect(screen,self.color,self.txtBox, 2)
+        screen.blit(self.txtRender,(self.txtBox.x+5,self.txtBox.y+2))
