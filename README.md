@@ -1,3 +1,3 @@
-Estos son imputs para utilisarlos en pygame
+Estos son imputs para utilisarlos en pygameadsñ
 
 #Botones 
