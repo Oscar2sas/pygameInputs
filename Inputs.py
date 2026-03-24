@@ -170,6 +170,7 @@ class RadioGroup:
         for idB,btn in enumerate(self.botones):
             if idB == default:
                 btn.selected = True
+                self.selected = btn
             else:
                 btn.selected = False
 

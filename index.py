@@ -27,7 +27,7 @@ class LaboratorioInputs:
 
         # 3. Preferencias (RadioGroup)
         opciones = [("Mañana", "am"), ("Tarde", "pm"), ("Noche", "night")]
-        self.grupo_horario = RadioGroup(50, 270, opciones, radio=8, defaul=0)
+        self.grupo_horario = RadioGroup(50, 270, opciones, radio=8, defaul=2)
 
         # 4. Confirmación (checkBox)
         self.check_terminos = checkBox(50, 380, "He revisado todos los parámetros", 1)
