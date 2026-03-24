@@ -170,8 +170,43 @@ class RadioGroup:
         for rb in self.botones:
             rb.Render(screen)
 
-    
+class Slider:
+    def __init__(self,x,y,width,valMin,valMax,valInit,label = ""):
+        self.bar = pg.Rect(x,y,width,5)
+        self.radioBar = 10
+        self.valMax = valMax
+        self.valMin = valMin
+        self.valInit = valInit
+        self.label = label
+        self.font = pg.font.SysFont('arial',16)
 
+        xpos = x + (self.valInit - self.valMin) / (self.valMax-self.valMin) * width
+        self.poscircle = [xpos,y+2.5]
 
+        self.agarrado = False
 
+    def checkEvent(self,event):
+        if event.type == pg.MOUSEBUTTONDOWN:
+            centro = pg.Vector2(self.poscircle)
+            if centro.distance_squared_to(event.pos) <= self.radioBar**2:
+                self.agarrado = True
+
+        if event.type == pg.MOUSEBUTTONUP:
+            self.agarrado = False
+
+        if event.type == pg.MOUSEMOTION and self.agarrado:
+            self.poscircle[0] = max(self.bar.left,min(event.pos[0],self.bar.right))
+
+    def getPosition(self):
+        porcentaje = (self.poscircle[0]-self.bar.x) / self.bar.w
+        value = self.valMin + porcentaje * (self.valMax-self.valMin)
+        return int(value)
+
+    def Render(self,screen):
+        if self.label:
+            lbl = self.font.render(f"{self.label}: {self.getPosition()}", True, "white")
+            screen.blit(lbl, (self.bar.right+10, self.bar.y-10))
+
+        pg.draw.rect(screen,(100,100,100),self.bar)
+        pg.draw.circle(screen,(41, 128, 185),self.poscircle,self.radioBar)
         

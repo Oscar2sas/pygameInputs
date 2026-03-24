@@ -5,3 +5,5 @@ Estos son imputs para utilisarlos en pygame
 #Entrada de Texto
 
 #Selector circular
+
+#Sliders
