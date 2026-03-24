@@ -84,7 +84,7 @@ class InputText:
         self.text = ""
         self.UpdateText()
 
-    def check_active(self,event,func=None):
+    def check_active(self,event):
 
         if event.type == pg.MOUSEBUTTONDOWN:
             self.activo = self.txtBox.collidepoint(event.pos)
@@ -95,7 +95,6 @@ class InputText:
             if event.key == pg.K_RETURN:
                 self.activo = False
                 self.UpdateText()
-                return func()
             elif event.key == pg.K_BACKSPACE:
                 self.text = self.text[:-1]
             else:
@@ -128,7 +127,6 @@ class RadioButton:
                 return True
             return False
 
-
     def Render(self,screen):
         pg.draw.circle(screen,(127, 140, 141),self.position,self.radio,2)
         if self.selected:
@@ -141,6 +139,7 @@ class RadioGroup:
     def __init__(self,x,y,listaRB,radio = 12, espacio = None,defaul = 0):
         self.botones = []
         self.selected = None
+        self.defaul = defaul
         espaciado = espacio if espacio else radio*3
 
         for rb,(texto,idRB) in enumerate(listaRB):
@@ -166,6 +165,15 @@ class RadioGroup:
     def ObtenerSeleccion(self):
         return self.selected.id if self.selected else None
     
+    def Reset(self):
+        default = self.defaul
+        for idB,btn in enumerate(self.botones):
+            if idB == default:
+                btn.selected = True
+            else:
+                btn.selected = False
+
+
     def Render(self,screen):
         for rb in self.botones:
             rb.Render(screen)
@@ -179,9 +187,10 @@ class Slider:
         self.valInit = valInit
         self.label = label
         self.font = pg.font.SysFont('arial',16)
+        self.ypos = y
 
-        xpos = x + (self.valInit - self.valMin) / (self.valMax-self.valMin) * width
-        self.poscircle = [xpos,y+2.5]
+        self.xpos = x + (self.valInit - self.valMin) / (self.valMax-self.valMin) * width
+        self.poscircle = [self.xpos,y+2.5]
 
         self.agarrado = False
 
@@ -197,6 +206,9 @@ class Slider:
         if event.type == pg.MOUSEMOTION and self.agarrado:
             self.poscircle[0] = max(self.bar.left,min(event.pos[0],self.bar.right))
 
+    def Reset(self):
+        self.poscircle = [self.xpos,self.ypos+2.5]
+
     def getPosition(self):
         porcentaje = (self.poscircle[0]-self.bar.x) / self.bar.w
         value = self.valMin + porcentaje * (self.valMax-self.valMin)
@@ -209,4 +221,40 @@ class Slider:
 
         pg.draw.rect(screen,(100,100,100),self.bar)
         pg.draw.circle(screen,(41, 128, 185),self.poscircle,self.radioBar)
-        
+
+class checkBox:
+    def __init__(self,x,y,text,id,state = False,size = 16):
+            
+            self.text = text
+            self.defaultState = state
+            self.state = state
+            self.size = size
+            self.fontsize = size+4
+
+            self.checkbBox = pg.Rect(x,y,size,size)
+
+            self.font = pg.font.SysFont("system",self.fontsize)
+            self.texR = self.font.render(self.text,True,"white")
+
+            anchoTotal = self.checkbBox.w + 10 + self.texR.get_width()
+            self.content = pg.Rect(x,y,anchoTotal,size)
+
+    def checkEvent(self,event):
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if self.content.collidepoint(event.pos):
+                self.state = not self.state
+                return True
+        return False
+
+    def Reset(self):
+        self.state = self.defaultState
+
+    def Render(self,screen):
+        pg.draw.rect(screen,"black",self.checkbBox,2,6)
+
+        if self.state:
+            margin = self.size // 4
+            check = self.checkbBox.inflate(-margin*2,-margin*2)
+            pg.draw.rect(screen,(41, 128, 185),check,0,3)
+
+        screen.blit(self.texR,(self.checkbBox.right+10,self.checkbBox.y+2))
