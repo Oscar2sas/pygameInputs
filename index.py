@@ -11,12 +11,12 @@ class Ejemplos:
         self.ejecutando = True
         
         # Estado inicial
-        self.bkg_color = (149, 165, 166)
+        self.bkg_color = (44, 62, 80)
 
-        btn1 = Buttons(10,40,"Saludar",paddingW=40,paddinngH=20,color=(142, 68, 173),font='Bauhaus 93',fontSize=36,box_shadow=2)
-        btn2 = Buttons(200,40,"Enviar",paddingW=20,color=(41, 128, 185))
-        btn3 = Buttons(300,40,"Pulsa",paddingW=50,radius=20,color= (41, 128, 185),box_shadow=2)
-        btn4 = Buttons(450,40,"Cancelar",paddingW=30,paddinngH=20,radius=3,color=(192, 57, 43),box_shadow=2)
+        btn1 = Buttons(10,40,"Saludar",padding_W=40,padding_H=20,colors=(142, 68, 173),font='consolas',font_size=36,box_shadow=2,border_w=2)
+        btn2 = Buttons(200,40,"Enviar",)
+        btn3 = Buttons(270,40,"Pulsa",padding_W=100,radius=20,colors= (44, 62, 80),box_shadow=2,border_w=1,border_color=(41, 128, 185))
+        btn4 = Buttons(450,40,"Cancelar",font_color=(149, 165, 166),padding_W=30,padding_H=20,radius=3,colors=(44, 62, 80),box_shadow=2,border_w=1,border_color=(192, 57, 43))
 
         self.lista = [
             btn1,
@@ -31,8 +31,7 @@ class Ejemplos:
                 self.ejecutando = False
 
             for btn in self.lista:
-               if btn.Selecction(evento) :
-                   print("hola")
+               btn.check_event(evento) 
 
     def dibujar(self):
         self.ventana.fill(self.bkg_color)

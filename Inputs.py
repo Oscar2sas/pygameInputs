@@ -1,85 +1,98 @@
 import pygame as pg
 
 class Buttons:
-    def __init__(self,posX,posY,text = "Button",font = "arial",fontSize = 20,fontColor = "White",color = (149, 165, 166) ,paddingW = 5,paddinngH = 5,radius = 0,box_shadow = 0):
+    def __init__(self,pos_X,pos_Y,text = "Button",colors = (149, 165, 166),font = "arial",font_size = 20,
+                 font_color = "White",padding_W = 5,padding_H = 5,radius = 0,box_shadow = 0,
+                 border_w = 0,border_color = None):
         
-        self.shadow = True
+        def limit_color(color): return max(0,min(255,color))
+        
+        self.posX = pos_X
+        self.posY = pos_Y
         self.boxShadow = box_shadow
-        self.posX = posX
-        self.posY = posY
-        self.paddingW = paddingW
-        self.paddingH = paddinngH
+        self.paddingW = padding_W
+        self.paddingH = padding_H
+        self.radius = radius
+        self.borderW = border_w
+        self.pressed = False
+        self.hover = False
+
         #Para el texto del boton
         self.text = text
-        self.font = pg.font.SysFont(font,fontSize)
-        self.txtR = self.font.render(self.text,True,fontColor)
-
-        self.Dimencionar()
+        self.font = pg.font.SysFont(font,font_size)
+        self.txtR = self.font.render(self.text,True,font_color)
 
         #Colores cunado el cursos esa encima del curso o no
-        self.ColorDC = color
-        self.ColorAC = (color[0]+20,color[1]+20,color[2]+20)
-        self.colorShadow = (color[0]-30,color[1]-30,color[2]-30)
+        self.ColorDC = colors
+        self.ColorAC = tuple(limit_color(color + 25) for color in colors)
+        self.colorShadow = tuple(limit_color(color -40) for color in colors)
+        if border_color is None:
+            self.borderColor = tuple(limit_color(color +10) for color in colors)
+        else:
+            self.borderColor = border_color
 
         self.Color = self.ColorDC
 
-        #Biselar Bordes
-        self.radius = radius
+        self.resize()
 
-    def Selecction(self,event,func = lambda : print("NONE")):
-        #Obtenemos la posicion del Cursor
-        mousePos = pg.mouse.get_pos()
+    def check_event(self,event,func = lambda : print("NONE")):
+       # 1. Actualizamos el hover siempre que el mouse se mueva
+        if event.type == pg.MOUSEMOTION:
+            self.hover = self.btnBox.collidepoint(event.pos)
+        
+        # 2. Lógica de colores basada en el hover (fuera del tipo de evento)
+        self.Color = self.ColorAC if self.hover else self.ColorDC
 
-        #comporobamos que el curos lo esta tocando
-        if self.btnBox.collidepoint(mousePos):
-            self.Color = self.ColorAC
+        # 3. Lógica de click
+        if self.hover:
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                self.pressed = True
+            if event.type == pg.MOUSEBUTTONUP and event.button == 1:
+                if self.pressed:
+                    func()
+                    self.pressed = False
+                    return True 
+        
+        # Si el mouse sale del botón mientras estaba presionado, cancelamos
+        if not self.hover and event.type == pg.MOUSEMOTION:
+            self.pressed = False
             
-            
+        return False
 
-            #Comprobamos que se hizo Click
-            if event.type == pg.MOUSEBUTTONDOWN:
-                #Se ejecuta la funcion que le allan pasado
-                self.shadow = False
-                self.Dimencionar()
-            
-            if event.type == pg.MOUSEBUTTONUP:
-                self.shadow = True
-                self.Dimencionar()
-                return True
-
-        else:
-            self.Color = self.ColorDC
-
-    def Dimencionar(self):
+    def resize(self):
         #El ancho y el alto auta-ajustable del boton
-        width = max(10,self.txtR.get_width())+self.paddingW
+        width = max(10,self.txtR.get_width())+self.paddingW 
         height = max(10,self.txtR.get_height())+self.paddingH
 
-        #el recuadro del boton
-        if not self.shadow:
-            self.btnBox = pg.Rect(self.posX+self.boxShadow,self.posY+self.boxShadow,0,0)
-        else:
-            self.btnBox = pg.Rect(self.posX,self.posY,0,0)
-            self.btnBoxshadow = pg.Rect(self.posX+self.boxShadow,self.posY+self.boxShadow,0,0)
+        self.btnBox = pg.Rect(self.posX,self.posY,width,height)
+        self.btnBoxshadow = pg.Rect(self.posX+self.boxShadow,self.posY+self.boxShadow,width,height)
 
-        #Ajustar las Medidas segun la fuente y el tamaño
-        self.btnBox.w = width
-        self.btnBox.h = height
-        self.btnBoxshadow.w = width
-        self.btnBoxshadow.h = height
-
-        #Centrar el texto siempre
-        self.centerX = self.btnBox.x + (self.btnBox.w - self.txtR.get_width())//2
-        self.centerY = self.btnBox.y + (self.btnBox.h - self.txtR.get_height())//2
+        self.testPos = (
+            self.btnBox.x + (self.btnBox.w - self.txtR.get_width())//2,
+            self.btnBox.y + (self.btnBox.h - self.txtR.get_height())//2
+        )
           
 
     def Render(self,screen):
-        #Dibujamos el rectangulo del Boton y su texto
-        if self.shadow:
-            pg.draw.rect(screen,(self.colorShadow),self.btnBoxshadow,0,self.radius)
+        # Si está presionado, desplazamos el dibujo hacia la posición de la sombra 
+        offset = self.boxShadow if self.pressed else 0
         
-        pg.draw.rect(screen,(self.Color),self.btnBox,0,self.radius)
-        screen.blit(self.txtR,(self.centerX,self.centerY))
+        # Creamos una copia temporal del rect para el dibujo actual
+        draw_rect = self.btnBox.move(offset, offset)
+
+        # 1. Dibujar Sombra (solo si no está presionado para dar efecto de profundidad)
+        if self.boxShadow > 0 and not self.pressed:
+            pg.draw.rect(screen, self.colorShadow, self.btnBoxshadow, 0, self.radius)
+        
+        # 2. Cuerpo del Botón
+        pg.draw.rect(screen, self.Color, draw_rect, 0, self.radius)
+        
+        # 3. Borde (ahora sí usamos self.borderColor que antes faltaba)
+        if self.borderW > 0:
+            pg.draw.rect(screen, self.borderColor, draw_rect, self.borderW, self.radius)
+        
+        # 4. Texto (ajustado al offset del botón)
+        screen.blit(self.txtR, (self.testPos[0] + offset, self.testPos[1] + offset))
 
 class InputText:
     def __init__(self,posX,posY,fontSize = 20,placeholder = "Escribe Aqui...",colorAct = (236, 240, 241) ,colorDec=(52,73,94)):
