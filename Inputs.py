@@ -27,7 +27,7 @@ class Buttons:
         self.ColorAC = tuple(limit_color(color + 25) for color in colors)
         self.colorShadow = tuple(limit_color(color -40) for color in colors)
         if border_color is None:
-            self.borderColor = tuple(limit_color(color +10) for color in colors)
+            self.borderColor = tuple(limit_color(color +20) for color in colors)
         else:
             self.borderColor = border_color
 
@@ -35,7 +35,7 @@ class Buttons:
 
         self.resize()
 
-    def check_event(self,event,func = lambda : print("NONE")):
+    def check_event(self,event,func = lambda: None,param = None):
        # 1. Actualizamos el hover siempre que el mouse se mueva
         if event.type == pg.MOUSEMOTION:
             self.hover = self.btnBox.collidepoint(event.pos)
@@ -49,7 +49,7 @@ class Buttons:
                 self.pressed = True
             if event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 if self.pressed:
-                    func()
+                    func(param) if param is not None else func()
                     self.pressed = False
                     return True 
         
@@ -67,7 +67,7 @@ class Buttons:
         self.btnBox = pg.Rect(self.posX,self.posY,width,height)
         self.btnBoxshadow = pg.Rect(self.posX+self.boxShadow,self.posY+self.boxShadow,width,height)
 
-        self.testPos = (
+        self.textPos = (
             self.btnBox.x + (self.btnBox.w - self.txtR.get_width())//2,
             self.btnBox.y + (self.btnBox.h - self.txtR.get_height())//2
         )
@@ -92,7 +92,7 @@ class Buttons:
             pg.draw.rect(screen, self.borderColor, draw_rect, self.borderW, self.radius)
         
         # 4. Texto (ajustado al offset del botón)
-        screen.blit(self.txtR, (self.testPos[0] + offset, self.testPos[1] + offset))
+        screen.blit(self.txtR, (self.textPos[0] + offset, self.textPos[1] + offset))
 
 class InputText:
     def __init__(self,posX,posY,fontSize = 20,placeholder = "Escribe Aqui...",colorAct = (236, 240, 241) ,colorDec=(52,73,94)):
@@ -142,11 +142,10 @@ class InputText:
                 self.text += event.unicode
             self.UpdateText()
 
-
-
     def Render(self,screen):
         pg.draw.rect(screen,self.color,self.txtBox, 2)
         screen.blit(self.txtRender,(self.txtBox.x+5,self.txtBox.y+2))
+
 
 class RadioButton:
     def __init__(self,posX,posY,text,idselected,radio = 8):
