@@ -1,41 +1,58 @@
 import pygame as pg
+from Themes import THEMES
+
+colorTheme = (149, 165, 166)
+colorDarckTheme = (45, 52, 54)
 
 class Buttons:
-    def __init__(self,pos_X,pos_Y,text = "Button",colors = (149, 165, 166),font = "arial",font_size = 20,
-                 font_color = "White",padding_W = 5,padding_H = 5,radius = 0,box_shadow = 0,
-                 border_w = 0,border_color = None):
-        
-        def limit_color(color): return max(0,min(255,color))
-        
+    def __init__(self,pos_X,pos_Y,text = "Button",theme = None, **kwargs):
+
+        if theme and theme in THEMES:
+            thme = THEMES[theme]
+            self.ColorDC = thme.get("color")
+            colors = self.colors(self.ColorDC)
+            self.ColorAC = colors[0]
+            self.colorShadow = colors[1]
+            self.borderColor = thme.get("border_color")
+            self.boxShadow = thme.get("box_shadow")
+            self.paddingW = thme.get("padding_w")
+            self.paddingH = thme.get("padding_h")
+            self.radius = thme.get("radius")
+            self.borderW = thme.get("border_w")
+            self.ftn = thme.get("font")
+            self.ftn_size = thme.get("font_size")
+            self.ftn_color = thme.get("font_color")
+        else:
+            self.ColorDC = kwargs.get("color",(189, 195, 199))
+            colors = self.colors(self.ColorDC)
+            self.ColorAC = colors[0]
+            self.colorShadow = colors[1]
+            self.borderColor = colors[2]
+            self.boxShadow = kwargs.get("box_shadow",1)
+            self.paddingW = kwargs.get("padding_w",5)
+            self.paddingH = kwargs.get("padding_h",5)
+            self.radius = kwargs.get("radius",0)
+            self.borderW = kwargs.get("border_w",0)
+            self.ftn = kwargs.get("font","arial")
+            self.ftn_size = kwargs.get("font_size",15)
+            self.ftn_color = kwargs.get("font_color","black")
+
         self.posX = pos_X
         self.posY = pos_Y
-        self.boxShadow = box_shadow
-        self.paddingW = padding_W
-        self.paddingH = padding_H
-        self.radius = radius
-        self.borderW = border_w
+
         self.pressed = False
         self.hover = False
 
         #Para el texto del boton
         self.text = text
-        self.font = pg.font.SysFont(font,font_size)
-        self.txtR = self.font.render(self.text,True,font_color)
-
-        #Colores cunado el cursos esa encima del curso o no
-        self.ColorDC = colors
-        self.ColorAC = tuple(limit_color(color + 25) for color in colors)
-        self.colorShadow = tuple(limit_color(color -40) for color in colors)
-        if border_color is None:
-            self.borderColor = tuple(limit_color(color +20) for color in colors)
-        else:
-            self.borderColor = border_color
+        self.font = pg.font.SysFont(self.ftn,self.ftn_size)
+        self.txtR = self.font.render(self.text,True,self.ftn_color)
 
         self.Color = self.ColorDC
 
         self.resize()
 
-    def check_event(self,event,func = lambda: None,param = None):
+    def check_event(self,event,func = lambda : None,param = None):
        # 1. Actualizamos el hover siempre que el mouse se mueva
         if event.type == pg.MOUSEMOTION:
             self.hover = self.btnBox.collidepoint(event.pos)
@@ -49,7 +66,10 @@ class Buttons:
                 self.pressed = True
             if event.type == pg.MOUSEBUTTONUP and event.button == 1:
                 if self.pressed:
-                    func(param) if param is not None else func()
+                    if param is not None:
+                        func(param)
+                    else:
+                        func()
                     self.pressed = False
                     return True 
         
@@ -71,7 +91,13 @@ class Buttons:
             self.btnBox.x + (self.btnBox.w - self.txtR.get_width())//2,
             self.btnBox.y + (self.btnBox.h - self.txtR.get_height())//2
         )
-          
+
+    def colors(self,value):
+        print(value)
+        color_hover = tuple(max(0,min(255,color+10)) for color in value)
+        color_shadow = tuple(max(0,min(255,color-40)) for color in value)
+        color_border = tuple(max(0,min(255,color+15)) for color in value)
+        return color_hover,color_shadow,color_border      
 
     def Render(self,screen):
         # Si está presionado, desplazamos el dibujo hacia la posición de la sombra 
@@ -95,7 +121,7 @@ class Buttons:
         screen.blit(self.txtR, (self.textPos[0] + offset, self.textPos[1] + offset))
 
 class InputText:
-    def __init__(self,posX,posY,fontSize = 20,placeholder = "Escribe Aqui...",colorAct = (236, 240, 241) ,colorDec=(52,73,94)):
+    def __init__(self,posX,posY,fontSize = 20,placeholder = "Escribe Aqui...",colorAct = (9, 132, 227) ,colorDec=(99, 110, 114)):
 
         self.placeholder = placeholder
         self.text = ""
@@ -143,9 +169,9 @@ class InputText:
             self.UpdateText()
 
     def Render(self,screen):
-        pg.draw.rect(screen,self.color,self.txtBox, 2)
+        pg.draw.rect(screen,"black",(self.txtBox.x+1,self.txtBox.y+1,self.txtBox.w,self.txtBox.h), 1,8)
+        pg.draw.rect(screen,self.color,self.txtBox, 1,8)
         screen.blit(self.txtRender,(self.txtBox.x+5,self.txtBox.y+2))
-
 
 class RadioButton:
     def __init__(self,posX,posY,text,idselected,radio = 8):
@@ -168,15 +194,16 @@ class RadioButton:
             return False
 
     def Render(self,screen):
-        pg.draw.circle(screen,(127, 140, 141),self.position,self.radio,2)
+        pg.draw.circle(screen,(127, 140, 141),self.position,self.radio,1)
         if self.selected:
+            pg.draw.circle(screen,(41, 128, 185),self.position,self.radio,1)
             pg.draw.circle(screen,(41, 128, 185),self.position,self.radio//2)
 
         centrado = self.position[1] - (self.txtR.get_height() //2)
         screen.blit(self.txtR,(self.position[0]+20,centrado))
 
 class RadioGroup:
-    def __init__(self,x,y,listaRB,radio = 12, espacio = None,defaul = 0):
+    def __init__(self,x,y,listaRB,radio = 10, espacio = None,defaul = 0):
         self.botones = []
         self.selected = None
         self.defaul = defaul
@@ -220,7 +247,26 @@ class RadioGroup:
             rb.Render(screen)
 
 class Slider:
-    def __init__(self,x,y,width,valMin,valMax,valInit,label = ""):
+    def __init__(self,x,y,width,valMin,valMax,valInit,label = "", theme = None, **args):
+
+        if theme and theme in THEMES:
+            thme = THEMES[theme]
+            colorss = self.colors(thme.get("color"))
+            self.color_bar = colorss[0]
+            self.color_circle = thme.get("color")
+            self.border = thme.get("border_w")
+            self.color_border = thme.get("border_color")
+            self.color_shadow = colorss[1]
+            self.fnt_color = thme.get("font_color")
+        else:
+            self.color_bar = (100,100,100)
+            self.color_circle = "blue"
+            self.color_shadow = "red"
+            self.fnt_color = "blue"
+            self.color_border = "black"
+            self.border = 1
+            
+
         self.bar = pg.Rect(x,y,width,5)
         self.radioBar = 10
         self.valMax = valMax
@@ -230,8 +276,7 @@ class Slider:
         self.font = pg.font.SysFont('arial',16)
         self.ypos = y
 
-        self.xpos = x + (self.valInit - self.valMin) / (self.valMax-self.valMin) * width
-        self.poscircle = [self.xpos,y+2.5]
+        self.set_pos(valInit)
 
         self.agarrado = False
 
@@ -250,18 +295,30 @@ class Slider:
     def Reset(self):
         self.poscircle = [self.xpos,self.ypos+2.5]
 
+    def set_pos(self,valor):
+        self.valInit = valor
+        self.xpos = 10 + (self.valInit - self.valMin) / (self.valMax-self.valMin) * 180
+        self.poscircle = [self.xpos,self.ypos+2.5]
+
     def getPosition(self):
         porcentaje = (self.poscircle[0]-self.bar.x) / self.bar.w
         value = self.valMin + porcentaje * (self.valMax-self.valMin)
         return int(value)
 
+    def colors(self,value):
+        color_bar = tuple(max(0,min(255,color-20)) for color in value)
+        color_shadow = tuple(max(0,min(255,color-50)) for color in value)
+        return color_bar, color_shadow
+
     def Render(self,screen):
         if self.label:
-            lbl = self.font.render(f"{self.label}: {self.getPosition()}", True, "white")
+            lbl = self.font.render(f"{self.label}: {self.getPosition()}", True, self.fnt_color)
             screen.blit(lbl, (self.bar.right+10, self.bar.y-10))
 
-        pg.draw.rect(screen,(100,100,100),self.bar)
-        pg.draw.circle(screen,(41, 128, 185),self.poscircle,self.radioBar)
+        pg.draw.rect(screen,self.color_bar,self.bar,0,6)
+        pg.draw.circle(screen,self.color_shadow,(self.poscircle[0]+1,self.poscircle[1]+1),self.radioBar)
+        pg.draw.circle(screen,self.color_circle,self.poscircle,self.radioBar)
+        pg.draw.circle(screen,self.color_border,self.poscircle,self.radioBar,self.border)
 
 class checkBox:
     def __init__(self,x,y,text,id,state = False,size = 16):
@@ -291,11 +348,13 @@ class checkBox:
         self.state = self.defaultState
 
     def Render(self,screen):
-        pg.draw.rect(screen,"black",self.checkbBox,2,6)
-
+        
         if self.state:
             margin = self.size // 4
             check = self.checkbBox.inflate(-margin*2,-margin*2)
-            pg.draw.rect(screen,(41, 128, 185),check,0,3)
+            pg.draw.rect(screen,(41, 128, 185),self.checkbBox,2,2)
+            pg.draw.rect(screen,(41, 128, 185),check,0,2)
+        else:
+            pg.draw.rect(screen,"black",self.checkbBox,2,2)
 
         screen.blit(self.texR,(self.checkbBox.right+10,self.checkbBox.y+2))

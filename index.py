@@ -1,84 +1,131 @@
 import pygame as pg
 import sys
-from Inputs import Buttons, InputText, RadioGroup, Slider, checkBox # Importamos todas tus clases
+from Inputs import *
+from Themes import THEMES
 
-# 1. Funciones de callback para los componentes
-def al_guardar(datos):
-    print(f"--- Datos Guardados ---")
-    print(f"Nombre: {datos['nombre']}")
-    print(f"Clase: {datos['clase']}")
-    print(f"Nivel de Fuerza: {datos['fuerza']}")
-    print(f"¿Es Veterano?: {'Sí' if datos['veterano'] else 'No'}")
-
-# 2. Configuración inicial de Pygame
-pg.init()
-pantalla = pg.display.set_mode((600, 400))
-pg.display.set_caption("Ejemplo Integrado de Inputs")
-reloj = pg.time.Clock()
-fuente_titulo = pg.font.SysFont("arial", 24, bold=True)
-
-# 3. Instanciamos todos los componentes
-# Input de Texto para el nombre
-input_nombre = InputText(50, 80, placeholder="Nombre del héroe...")
-
-# Grupo de RadioButtons para elegir clase (Texto, ID)
-opciones_clase = [("Guerrero", "warrior"), ("Mago", "mage"), ("Arquero", "archer")]
-radio_clase = RadioGroup(50, 150, opciones_clase, radio=10, espacio=30)
-
-# Slider para la fuerza (Min 0, Max 100, Inicio 50)
-slider_fuerza = Slider(50, 280, 200, 0, 100, 50, label="Fuerza")
-
-# Checkbox para estado de veterano
-check_veterano = checkBox(50, 320, "Usuario Veterano", "vet_status", state=False)
-
-# Botón para procesar todo
-btn_guardar = Buttons(400, 320, "Guardar", padding_W=40, padding_H=20, 
-                      box_shadow=4, radius=8, colors=(41, 128, 185))
-
-# 4. Bucle principal
-running = True
-while running:
-    # Captura de datos actualizados para el botón
-    datos_actuales = {
-        "nombre": input_nombre.text,
-        "clase": radio_clase.ObtenerSeleccion(),
-        "fuerza": slider_fuerza.getPosition(),
-        "veterano": check_veterano.state
-    }
-
-    for event in pg.event.get():
-        if event.type == pg.QUIT:
-            running = False
+class Ejemplos:
+    def __init__(self):
+        pg.init()
+        self.medidasVentana = (640, 320)
+        self.ventana = pg.display.set_mode(self.medidasVentana)
+        pg.display.set_caption("Pygame UI interfaces")
+        self.fps = pg.time.Clock()
+        self.ejecutando = True
         
-        # Pasamos los eventos a cada componente
-        input_nombre.check_active(event)
-        radio_clase.checkEvent(event)
-        slider_fuerza.checkEvent(event)
-        check_veterano.checkEvent(event)
+        theme = "light"
+        # Estado inicial
+        self.bkg_color = THEMES[theme].get("color")
+
+        self.rectanguloMuestra = pg.Rect(300,10,50,50)
+        self.colorRectanguloMuestra = (200,80,80)
+        self.colorBordeMuestra = (200,200,200)
+
+        self.inputAncho = InputText(10,10,placeholder="Ancho") 
+        self.inputAlto = InputText(140,10,placeholder="Alto") 
+
+        self.botonCambiarTamaño = Buttons(10,50,"Cambiar Tamaño",color = (0, 151, 230),theme=theme) 
+
+        self.sliderR = Slider(10,100,180,0,255,200,"Rojo",theme=theme)
+        self.sliderG = Slider(10,125,180,0,255,80,"Verde",theme=theme)
+        self.sliderB = Slider(10,150,180,0,255,80,"Azul",theme=theme)
+
+        listaOpciones = [
+            ("Relleno",1),
+            ("Borde",2),
+            ("Color de fondo",3)
+        ]
+
+        self.opciones = RadioGroup(15,180,listaOpciones,espacio=30,defaul=0)
+
+        self.chek = checkBox(10,280,"Pantalla Completa",1)
+
+    def cambiar_tamaño(self):
+        if self.inputAlto.text == '' or self.inputAncho.text == '':
+            print('debes colocar ambos valores')
+            return
+        else:
+            self.rectanguloMuestra = pg.Rect(300,10,int(self.inputAncho.text),int(self.inputAlto.text))
+
+    def set_sliders(self):
+        seleccion = self.opciones.ObtenerSeleccion()
+
+        if seleccion == 1:
+            color = self.colorRectanguloMuestra
+        elif seleccion == 2:
+            color = self.colorBordeMuestra
+        elif seleccion == 3:
+            color =  self.bkg_color
+        else:
+            return
         
-        # El botón ejecuta la función con los datos actuales
-        btn_guardar.check_event(event, func=al_guardar, param=datos_actuales)
-
-    # 5. Renderizado
-    pantalla.fill((44, 62, 80)) # Fondo oscuro elegante
-    
-    # Dibujamos etiquetas de ayuda
-    titulo = fuente_titulo.render("Configuración de Personaje", True, "white")
-    pantalla.blit(titulo, (50, 30))
-    
-    lbl_clase = pg.font.SysFont("arial", 18).render("Selecciona tu clase:", True, (189, 195, 199))
-    pantalla.blit(lbl_clase, (50, 120))
-
-    # Renderizamos cada componente en pantalla
-    input_nombre.Render(pantalla)
-    radio_clase.Render(pantalla)
-    slider_fuerza.Render(pantalla)
-    check_veterano.Render(pantalla)
-    btn_guardar.Render(pantalla)
-
-    pg.display.flip()
-    reloj.tick(60)
-
-pg.quit()
-sys.exit()
+        self.sliderR.set_pos(color[0])
+        self.sliderG.set_pos(color[1])
+        self.sliderB.set_pos(color[2])
        
+    def manejar_eventos(self):
+        for evento in pg.event.get():
+            if evento.type == pg.QUIT:
+                self.ejecutando = False
+
+            self.inputAlto.check_active(evento)
+            self.inputAncho.check_active(evento)
+
+            self.botonCambiarTamaño.check_event(evento,self.cambiar_tamaño)
+
+            self.sliderR.checkEvent(evento)
+            self.sliderG.checkEvent(evento)
+            self.sliderB.checkEvent(evento)
+
+            if self.opciones.checkEvent(evento):
+                self.set_sliders()
+
+            if self.chek.checkEvent(evento):
+                if self.chek.state:
+                    pg.display.set_mode((0,0),pg.FULLSCREEN)
+                else:
+                    pg.display.set_mode(self.medidasVentana)
+
+            seleccion = self.opciones.ObtenerSeleccion()
+
+            self.colorActual = (self.sliderR.getPosition(),self.sliderG.getPosition(),self.sliderB.getPosition())
+            if seleccion == 1:    
+                self.colorRectanguloMuestra = self.colorActual
+            elif seleccion == 2:
+                self.colorBordeMuestra = self.colorActual
+            elif seleccion == 3:
+                self.bkg_color = self.colorActual
+
+
+    def dibujar(self):
+        self.ventana.fill(self.bkg_color)
+
+        self.inputAlto.Render(self.ventana)
+        self.inputAncho.Render(self.ventana)
+
+        self.botonCambiarTamaño.Render(self.ventana)
+
+        self.sliderR.Render(self.ventana)
+        self.sliderG.Render(self.ventana)
+        self.sliderB.Render(self.ventana)
+
+        self.opciones.Render(self.ventana)
+
+        self.chek.Render(self.ventana)
+
+
+        pg.draw.rect(self.ventana,self.colorRectanguloMuestra,self.rectanguloMuestra,0,12)
+        pg.draw.rect(self.ventana,self.colorBordeMuestra,self.rectanguloMuestra,2,12)
+        pg.display.flip()
+
+    def ejecutar(self):
+        while self.ejecutando:
+            self.manejar_eventos()
+            self.dibujar()
+            self.fps.tick(60)
+        pg.quit()
+        sys.exit()
+
+if __name__ == "__main__":
+    app = Ejemplos()
+    app.ejecutar()
+
